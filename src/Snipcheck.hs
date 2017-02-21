@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Snipcheck where
 
 import Control.Monad
@@ -7,6 +9,26 @@ import System.Process(readCreateProcess, shell)
 import Text.Pandoc (Block(..))
 
 import qualified Text.Pandoc as Pandoc
+
+data Sloppy a = Skip | Must a deriving (Show, Functor)
+
+sloppyString :: String -> Sloppy String
+sloppyString "..." = Skip
+sloppyString str = Must str
+
+checkSloppy :: Eq a => [a] -> [Sloppy a] -> Bool
+checkSloppy (a:as) ((Must a'):as')
+  | a == a' = checkSloppy as as'
+  | otherwise = False
+checkSloppy (a:as) as'@(Skip:(Must a'):as'')
+  | a == a' = checkSloppy as as''
+  | otherwise = checkSloppy as as'
+checkSloppy as (Skip:Skip:as') = checkSloppy as (Skip:as')
+checkSloppy [] ((Must _):_) = False
+checkSloppy [] (Skip:as') = checkSloppy [] as'
+checkSloppy [] [] = True
+checkSloppy (_:_) [] = False
+checkSloppy _ [Skip] = True
 
 checkMarkdownFile :: FilePath -> IO ()
 checkMarkdownFile fp = do
@@ -20,8 +42,9 @@ check (CodeBlock (typ, classes, kvs) content)
       let Right cmds = extractCommands content
       forM_ cmds $ \(cmd, expected) -> do
         actual <- lines <$> readCreateProcess (shell cmd) ""
-        unless (actual == expected) $ error $ mconcat
-          [ "Couldnt match expected ", show expected
+        let expected' = sloppyString <$> expected
+        unless (checkSloppy actual expected') $ error $ mconcat
+          [ "Couldnt match expected ", show expected'
           , " with " <> show actual
           ]
   | otherwise = print (typ, classes, kvs)
