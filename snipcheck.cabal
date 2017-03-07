@@ -1,5 +1,7 @@
 name:                snipcheck
 version:             0.1.0.0
+synopsis:            Markdown tester
+description:         Markdown snippet runner and checker
 homepage:            https://github.com/nmattia/snipcheck#readme
 license:             MIT
 license-file:        LICENSE
@@ -13,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  ghc-options:         -Wall -O2
+  ghc-options:         -Wall
   exposed-modules:     Snipcheck
   build-depends:       base >= 4.7 && < 5
                      , pandoc
