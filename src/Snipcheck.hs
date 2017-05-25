@@ -1,9 +1,11 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Snipcheck where
 
 import Control.Monad
 import Data.Maybe
+import qualified Data.Map as Map
 import Data.Monoid
 import System.Process(readCreateProcess, shell)
 import Text.Pandoc (Block(..))
@@ -17,14 +19,14 @@ sloppyString "..." = Skip
 sloppyString str = Must str
 
 checkSloppy :: Eq a => [a] -> [Sloppy a] -> Bool
-checkSloppy (a:as) ((Must a'):as')
+checkSloppy (a:as) (Must a':as')
   | a == a' = checkSloppy as as'
   | otherwise = False
-checkSloppy (a:as) as'@(Skip:(Must a'):as'')
+checkSloppy (a:as) as'@(Skip:Must a':as'')
   | a == a' = checkSloppy as as''
   | otherwise = checkSloppy as as'
 checkSloppy as (Skip:Skip:as') = checkSloppy as (Skip:as')
-checkSloppy [] ((Must _):_) = False
+checkSloppy [] (Must{}:_) = False
 checkSloppy [] (Skip:as') = checkSloppy [] as'
 checkSloppy [] [] = True
 checkSloppy (_:_) [] = False
@@ -32,9 +34,52 @@ checkSloppy _ [Skip] = True
 
 checkMarkdownFile :: FilePath -> IO ()
 checkMarkdownFile fp = do
-  content <- readFile fp
-  let (Right (Pandoc.Pandoc _meta blocks)) = Pandoc.readMarkdown Pandoc.def content
-  forM_ blocks check
+    content <- readFile fp
+    let Right (Pandoc.Pandoc meta blocks) = Pandoc.readMarkdown Pandoc.def content
+        sections = findSections meta
+        blocks' =
+          if null sections
+          then blocks
+          else filterBlocksBySectionName sections blocks
+    forM_ blocks' check
+
+data AcceptSection
+  = GoodSection
+  | BadSection
+  | Dunno
+
+filterBlocksBySectionName :: [String] -> [Pandoc.Block] -> [Pandoc.Block]
+filterBlocksBySectionName secs = skipThese
+  where
+    skipThese, keepThese :: [Pandoc.Block] -> [Pandoc.Block]
+    skipThese (b:bs) =
+      case acceptSection b of
+        GoodSection -> keepThese bs
+        _ -> skipThese bs
+    skipThese [] = []
+    keepThese (b:bs) = b : case acceptSection b of
+      BadSection -> skipThese bs
+      _ -> keepThese bs
+    keepThese [] = []
+    acceptSection :: Pandoc.Block -> AcceptSection
+    acceptSection (Pandoc.Header _ (hName,_,_) _)
+      | hName `elem` secs = GoodSection
+      | otherwise = BadSection
+    acceptSection _ = Dunno
+
+findSections :: Pandoc.Meta -> [String]
+findSections (Pandoc.unMeta -> meta) =
+  case Map.lookup "sc_check-sections" meta of
+    Just (Pandoc.MetaList ss) -> join $ unMetaString <$> ss
+    _ -> []
+  where
+    unMetaString :: Pandoc.MetaValue -> [String]
+    unMetaString (Pandoc.MetaString s) =[s]
+    unMetaString (Pandoc.MetaInlines is) = mapMaybe unMetaStr is
+    unMetaString _ = []
+    unMetaStr :: Pandoc.Inline -> Maybe String
+    unMetaStr (Pandoc.Str s) = Just s
+    unMetaStr _ = Nothing
 
 check :: Pandoc.Block -> IO ()
 check (CodeBlock (typ, classes, kvs) content)
@@ -55,8 +100,8 @@ extractCommands str = go (lines str)
   where
     go :: [String] -> Either String [(String, [String])]
     go (l:ls) | Just cmd <- toCommand l =
-      let (output, rest) = span (not . isCommand) ls
-      in ((cmd,output):) <$> (go rest)
+      let (output, rest) = break isCommand ls
+      in ((cmd,output):) <$> go rest
               | otherwise = Left $ "Expected a command, got " <> l
     go [] = Right []
     toCommand :: String -> Maybe String
