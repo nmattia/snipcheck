@@ -22,27 +22,27 @@ matrix:
   include:
     - env: BUILD=cabal CABALVER=1.22 GHCVER=7.10.1
       compiler: ": #GHC 7.10.1"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.1], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.1,happy-1.19.5], sources: [hvr-ghc]}}
 
     - env: BUILD=cabal CABALVER=1.22 GHCVER=7.10.2
       compiler: ": #GHC 7.10.2"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.2], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.2,happy-1.19.5], sources: [hvr-ghc]}}
 
     - env: BUILD=cabal CABALVER=1.22 GHCVER=7.10.3
       compiler: ": #GHC 7.10.3"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,happy-1.19.5], sources: [hvr-ghc]}}
 
     - env: BUILD=cabal CABALVER=1.24 GHCVER=8.0.2
       compiler: ": #GHC 8.0.2"
-      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2,happy-1.19.5], sources: [hvr-ghc]}}
 
     - env: BUILD=stack GHCVER=7.10.3 STACK_YAML=stack.yaml
       compiler: ": #stack 7.10.3"
-      addons: {apt: {packages: [cabal-install-head,ghc-7.10.3], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-head,ghc-7.10.3,happy-1.19.5], sources: [hvr-ghc]}}
 
     - env: BUILD=stack GHCVER=8.0.2 STACK_YAML=stack.yaml
       compiler: ": #stack 8.0.2"
-      addons: {apt: {packages: [cabal-install-head,ghc-8.0.2], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-head,ghc-8.0.2,happy-1.19.5], sources: [hvr-ghc]}}
 
     - env: BUILD=stack-osx STACK_YAML=stack.yaml
       compiler: ": #stack osx latest"
@@ -53,6 +53,7 @@ matrix:
 # - in install we install (haskell) dependencies
 before_install:
  - unset CC
+ - export PATH=/opt/happy/1.19.5/bin:$PATH
  - case "$BUILD" in
      stack)
        export PATH=$HOME/.local/bin:/opt/ghc/$GHCVER/bin:$PATH;;
