@@ -4,11 +4,13 @@
 module Snipcheck where
 
 import Control.Monad
+import Data.Char (isSpace)
+import Data.List (dropWhileEnd)
 import Data.Maybe
-import qualified Data.Map as Map
 import Data.Monoid
 import System.Process(readCreateProcess, shell)
 import Text.Pandoc (Block(..))
+import qualified Data.Map as Map
 
 import qualified Text.Pandoc as Pandoc
 
@@ -81,19 +83,23 @@ findSections (Pandoc.unMeta -> meta) =
     unMetaStr (Pandoc.Str s) = Just s
     unMetaStr _ = Nothing
 
+trim :: String -> String
+trim = dropWhile isSpace . dropWhileEnd isSpace
+
 check :: Pandoc.Block -> IO ()
 check (CodeBlock (typ, classes, kvs) content)
   | "shell" `elem` classes = do
       let Right cmds = extractCommands content
       forM_ cmds $ \(cmd, expected) -> do
-        actual <- lines <$> readCreateProcess (shell cmd) ""
-        let expected' = sloppyString <$> expected
+        actual <- (fmap trim . lines) <$> readCreateProcess (shell cmd) ""
+        let expected' = (sloppyString . trim) <$> expected
         unless (checkSloppy actual expected') $ error $ mconcat
           [ "Couldnt match expected ", show expected'
           , " with " <> show actual
           ]
   | otherwise = print (typ, classes, kvs)
 check _ = return ()
+
 
 extractCommands :: String -> Either String [(String, [String])]
 extractCommands str = go (lines str)
