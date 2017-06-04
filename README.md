@@ -1,5 +1,7 @@
 # Snipcheck
 
+https://travis-ci.org/nmattia/snipcheck.svg?branch=master
+
 Snipcheck makes sure that the code snippets in markdown files are up-to-date.
 
 This is very much a work in progress. The only function currently available is
