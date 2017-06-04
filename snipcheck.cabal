@@ -1,5 +1,5 @@
 name:                snipcheck
-version:             0.1.0.1
+version:             0.1.0.2
 synopsis:            Markdown tester
 description:         Markdown snippet runner and checker
 homepage:            https://github.com/nmattia/snipcheck#readme
