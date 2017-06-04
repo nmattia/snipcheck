@@ -1,6 +1,6 @@
 # Snipcheck
 
-https://travis-ci.org/nmattia/snipcheck.svg?branch=master
+[![Build Status](https://travis-ci.org/nmattia/snipcheck.svg?branch=master)](https://travis-ci.org/nmattia/snipcheck)
 
 Snipcheck makes sure that the code snippets in markdown files are up-to-date.
 
