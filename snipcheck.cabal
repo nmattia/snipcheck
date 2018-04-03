@@ -1,5 +1,5 @@
 name:                snipcheck
-version:             0.1.0.2
+version:             0.1.0.3
 synopsis:            Markdown tester
 description:         Markdown snippet runner and checker
 homepage:            https://github.com/nmattia/snipcheck#readme
@@ -7,7 +7,7 @@ license:             MIT
 license-file:        LICENSE
 author:              Nicolas Mattia
 maintainer:          nicolas@nmattia.com
-copyright:           2017 Nicolas Mattia
+copyright:           2018 Nicolas Mattia
 category:            Development
 build-type:          Simple
 extra-source-files:  README.md
@@ -18,7 +18,8 @@ library
   ghc-options:         -Wall
   exposed-modules:     Snipcheck
   build-depends:       base >= 4.7 && < 5
-                     , pandoc
-                     , process
                      , containers
+                     , pandoc >= 2
+                     , process
+                     , text
   default-language:    Haskell2010

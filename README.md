@@ -41,5 +41,5 @@ snippet. You can skip some of the output with `...`.
 > MINOR version when you add functionality in a backwards-compatible manner, and
 > PATCH version when you make backwards-compatible bug fixes.
 
-1. Run `stack update --pvp-bounds both .` to upload `snipcheck` to `hackage`
+1. Run `stack upload .` to upload `snipcheck` to `hackage`
 1. Commit the updated `snipcheck.cabal` file.

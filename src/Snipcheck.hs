@@ -11,6 +11,7 @@ import Data.Monoid
 import System.Process(readCreateProcess, shell)
 import Text.Pandoc (Block(..))
 import qualified Data.Map as Map
+import qualified Data.Text.IO as T
 
 import qualified Text.Pandoc as Pandoc
 
@@ -36,9 +37,10 @@ checkSloppy _ [Skip] = True
 
 checkMarkdownFile :: FilePath -> IO ()
 checkMarkdownFile fp = do
-    content <- readFile fp
-    let Right (Pandoc.Pandoc meta blocks) = Pandoc.readMarkdown Pandoc.def content
-        sections = findSections meta
+    content <- T.readFile fp
+    Right (Pandoc.Pandoc meta blocks) <-
+      Pandoc.runIO $ Pandoc.readMarkdown Pandoc.def content
+    let sections = findSections meta
         blocks' =
           if null sections
           then blocks
