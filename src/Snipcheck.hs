@@ -4,12 +4,15 @@
 module Snipcheck where
 
 import Control.Monad
+import Control.Exception
+import Control.Monad.IO.Class
 import Data.Char (isSpace)
 import Data.List (dropWhileEnd)
 import Data.Maybe
 import Data.Monoid
 import System.Process(readCreateProcess, shell)
 import Text.Pandoc (Block(..))
+import qualified Data.Text.IO as Text
 import qualified Data.Map as Map
 
 import qualified Text.Pandoc as Pandoc
@@ -36,14 +39,19 @@ checkSloppy _ [Skip] = True
 
 checkMarkdownFile :: FilePath -> IO ()
 checkMarkdownFile fp = do
-    content <- readFile fp
-    let Right (Pandoc.Pandoc meta blocks) = Pandoc.readMarkdown Pandoc.def content
+    content <- Text.readFile fp
+    eres <- Pandoc.runIO $ do
+      Pandoc.Pandoc meta blocks <- Pandoc.readMarkdown Pandoc.def content
+      let
         sections = findSections meta
         blocks' =
           if null sections
           then blocks
           else filterBlocksBySectionName sections blocks
-    forM_ blocks' check
+      forM_ blocks' check
+    case eres of
+      Right () -> pure ()
+      Left e -> throwIO $ userError $ show e
 
 data AcceptSection
   = GoodSection
@@ -86,18 +94,18 @@ findSections (Pandoc.unMeta -> meta) =
 trim :: String -> String
 trim = dropWhile isSpace . dropWhileEnd isSpace
 
-check :: Pandoc.Block -> IO ()
+check :: MonadIO m => Pandoc.Block -> m ()
 check (CodeBlock (typ, classes, kvs) content)
   | "shell" `elem` classes = do
       let Right cmds = extractCommands content
       forM_ cmds $ \(cmd, expected) -> do
-        actual <- (fmap trim . lines) <$> readCreateProcess (shell cmd) ""
+        actual <- (fmap trim . lines) <$> liftIO (readCreateProcess (shell cmd) "")
         let expected' = (sloppyString . trim) <$> expected
         unless (checkSloppy actual expected') $ error $ mconcat
           [ "Couldnt match expected ", show expected'
           , " with " <> show actual
           ]
-  | otherwise = print (typ, classes, kvs)
+  | otherwise = liftIO $ print (typ, classes, kvs)
 check _ = return ()
 
 
