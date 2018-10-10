@@ -9,7 +9,6 @@ import Control.Monad.IO.Class
 import Data.Char (isSpace)
 import Data.List (dropWhileEnd)
 import Data.Maybe
-import Data.Monoid
 import System.Process(readCreateProcess, shell)
 import Text.Pandoc (Block(..))
 import qualified Data.Text.IO as Text
