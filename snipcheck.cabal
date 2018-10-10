@@ -18,7 +18,8 @@ library
   ghc-options:         -Wall
   exposed-modules:     Snipcheck
   build-depends:       base >= 4.7 && < 5
+                     , containers
                      , pandoc
                      , process
-                     , containers
+                     , text
   default-language:    Haskell2010
