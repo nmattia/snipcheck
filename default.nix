@@ -1,8 +1,1 @@
-let
-  pkgs = import ./nix {};
-in
-  {
-    inherit (pkgs.haskellPackages)
-      snipcheck
-      ;
-  }
+let pkgs = import ./nix {}; in pkgs.packages.snipcheck
