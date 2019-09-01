@@ -44,3 +44,5 @@ snippet. You can skip some of the output with `...`.
 1. Run `cabal sdist` and `cabal upload --publish ./dist/snipcheck-...` to
    upload `snipcheck` to `hackage`
 1. Commit the updated `snipcheck.cabal` file.
+
+# test
